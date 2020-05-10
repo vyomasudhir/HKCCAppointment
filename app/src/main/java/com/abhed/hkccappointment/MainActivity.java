@@ -11,6 +11,9 @@ import android.icu.util.Calendar;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -341,29 +344,30 @@ public class MainActivity extends AppCompatActivity {
 
                 for (int min = startTime; min <= endTime; min = min + 15) {
                     TextView oneEvent = new TextView(MainActivity.this);
-                    hourlyLayout.addView(oneEvent);
+
                     oneEvent.setId(formatDateAsId(day));
                     oneEvent.setTextAppearance(R.font.roboto_regular);
                     oneEvent.setTextSize(12.0f);
                     //oneEvent.setTextColor(Color.parseColor("#ffffff"));
                     oneEvent.setPadding(10, 5 , 5, 5);
+                    oneEvent.setGravity(Gravity.CENTER_HORIZONTAL);
                     oneEvent.setLayoutParams(new LinearLayout.LayoutParams(275, 175));
 
 
                     int hr = min / 60;
                     int minute = min - (hr * 60);
                     String minStr = (Integer.toString(minute) + "0").substring(0, 2);
-                    String eventDisplay=null;
+                    Spanned eventDisplay=null;
                     if(hr<=11)
                     {
-                        eventDisplay = hr + ":" + minStr + " am";
+                        eventDisplay = Html.fromHtml("<b>"+ hr + ":" + minStr + " am</b>");
                     }
                     else
                     {
                         if(hr >= 13) {
                             hr = hr - 12;
                         }
-                        eventDisplay = hr + ":" + minStr + " pm";
+                        eventDisplay = Html.fromHtml("<b>"+ hr + ":" + minStr + " pm</b>");
                     }
                     boolean slotExists = false;
                     Appointment curAppt = null;
@@ -375,12 +379,16 @@ public class MainActivity extends AppCompatActivity {
                             if (loggedUserIsScheduler()
                                     || curAppt.getType().startsWith("Open")
                                     || curAppt.getPhone().equals(AWSMobileClient.getInstance().getUsername())) {
-                                eventDisplay = eventDisplay + "\n" + curAppt.getDisplayString();
+                                eventDisplay = (Spanned) TextUtils.concat(eventDisplay,"\n",curAppt.getDisplayString());
+                               // eventDisplay = eventDisplay + "\n" + curAppt.getDisplayString();
                             }
                             slotExists = true;
+                            break;
                         }
+                        curAppt = null;
                     }
                     if(slotExists) {
+                        Log.i("9031","working on " + curAppt.getType());
                         if(curAppt.getType().startsWith("Open"))
                         {
                             oneEvent.setBackgroundResource(R.drawable.slot_background_open);
@@ -392,6 +400,7 @@ public class MainActivity extends AppCompatActivity {
                                 oneEvent.setBackgroundResource(R.drawable.slot_background_reserved_forme);
                             }
                             else {
+                                Log.i("9031","setting reserved for type " + curAppt.getType());
                                 oneEvent.setBackgroundResource(R.drawable.slot_background_reserved);
                             }
                         }
@@ -399,7 +408,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     else
                     {
-                        eventDisplay = eventDisplay + "\nClosed";
+                        eventDisplay = (Spanned) TextUtils.concat(eventDisplay,"\nClosed");
+                        //eventDisplay = eventDisplay + "\nClosed";
                         oneEvent.setBackgroundResource(R.drawable.slot_background);
                     }
 
@@ -416,12 +426,17 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
 
-                    TextView padding = new TextView(MainActivity.this);
-                    padding.setText(" ");
-                    padding.setPadding(1, 5, 1, 5);
-                    padding.setBackgroundColor(Color.parseColor("#ffffff"));
-                    padding.setLayoutParams(new LinearLayout.LayoutParams(3, 185));
-                    hourlyLayout.addView(padding);
+                    if(loggedUserIsScheduler() || slotExists) {
+                        hourlyLayout.addView(oneEvent);
+
+
+                        TextView padding = new TextView(MainActivity.this);
+                        padding.setText(" ");
+                        padding.setPadding(1, 5, 1, 5);
+                        padding.setBackgroundColor(Color.parseColor("#ffffff"));
+                        padding.setLayoutParams(new LinearLayout.LayoutParams(3, 185));
+                        hourlyLayout.addView(padding);
+                    }
                 }
             }
         });
@@ -623,7 +638,7 @@ public class MainActivity extends AppCompatActivity {
     public void createOpenSlot(final Calendar cal, final String purpose) {
         Appointment appt = Appointment.builder()
                 .name("None")
-                .phone("9900572060")
+                .phone("+919900572060")
                 .type("Open - " + purpose)
                 .time(formatDateTime(cal))
                 .duration(15)
@@ -705,7 +720,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout dailyView = findViewById(R.id.llDailyView);
 
         final Calendar curDay = Calendar.getInstance();
-        curDay.setTime(forDay.getTime());
+        //curDay.setTime(forDay.getTime());
         TextView tv = findViewById(R.id.txtCurDateShown);
         tv.setText(formatDayDate(forDay));
         tv.setOnClickListener(new View.OnClickListener() {

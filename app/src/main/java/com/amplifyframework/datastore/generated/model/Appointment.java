@@ -268,7 +268,7 @@ public final class Appointment implements Model {
         }
         else if(getType().startsWith("Reserved"))
         {
-            ret = shorten(getName(), 9) + "\n" + getPhone().substring(2);
+            ret = shorten(getName(), 9) + "\n" + getPhone().substring(3);
         }
 
 
