@@ -1,0 +1,9 @@
+type Appointment @model {
+  id: ID!
+  name: String!
+  phone: String!
+  type: String!
+  time: String!
+  duration: Int!
+  description: String
+}

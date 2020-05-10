@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Healthy Kids Children\'s Clinic</string>
+
+    <string name="hi">
+        <font fgcolor="#444444">Haven’t registered yet?  </font><font fgcolor="#000000">Join now</font>
+    </string>
+</resources>

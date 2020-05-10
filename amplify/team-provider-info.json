@@ -1,0 +1,20 @@
+{
+    "dev": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-hkcc-dev-155439-authRole",
+            "UnauthRoleArn": "arn:aws:iam::766231626441:role/amplify-hkcc-dev-155439-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::766231626441:role/amplify-hkcc-dev-155439-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "amplify-hkcc-dev-155439-deployment",
+            "UnauthRoleName": "amplify-hkcc-dev-155439-unauthRole",
+            "StackName": "amplify-hkcc-dev-155439",
+            "StackId": "arn:aws:cloudformation:us-east-1:766231626441:stack/amplify-hkcc-dev-155439/4f61f710-8d28-11ea-846e-12da3ecd6186",
+            "AmplifyAppId": "d39a0m4mup4jb"
+        },
+        "categories": {
+            "auth": {
+                "hkcc319c6314": {}
+            }
+        }
+    }
+}

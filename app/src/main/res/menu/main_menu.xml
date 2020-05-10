@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_home"
+        android:icon="?attr/homeAsUpIndicator"
+        android:showAsAction="ifRoom"
+        android:title="Home" />
+    <item
+        android:id="@+id/menu_logout"
+        android:icon="@android:drawable/ic_lock_power_off"
+        android:showAsAction="ifRoom"
+        android:title="Logout" />
+</menu>

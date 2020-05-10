@@ -1,0 +1,34 @@
+# this is an auto generated file. This will be overwritten
+subscription OnCreateAppointment {
+  onCreateAppointment {
+    id
+    name
+    phone
+    type
+    time
+    duration
+    description
+  }
+}
+subscription OnUpdateAppointment {
+  onUpdateAppointment {
+    id
+    name
+    phone
+    type
+    time
+    duration
+    description
+  }
+}
+subscription OnDeleteAppointment {
+  onDeleteAppointment {
+    id
+    name
+    phone
+    type
+    time
+    duration
+    description
+  }
+}
