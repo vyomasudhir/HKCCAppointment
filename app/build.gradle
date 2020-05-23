@@ -42,4 +42,8 @@ dependencies {
 
     implementation 'com.amplifyframework:core:0.10.0'
     implementation 'com.amplifyframework:aws-api:0.10.0'
+
+    implementation 'com.google.android.material:material:1.1.0'
+
+
 }

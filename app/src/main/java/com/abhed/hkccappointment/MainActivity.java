@@ -1,17 +1,17 @@
 package com.abhed.hkccappointment;
 
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.Calendar;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
-import android.text.Spannable;
+import android.text.InputType;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.util.Log;
@@ -20,15 +20,20 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.IdRes;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
@@ -37,32 +42,69 @@ import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.SignInResult;
 import com.amazonaws.mobile.client.results.SignUpResult;
 import com.amazonaws.mobile.client.results.UserCodeDeliveryDetails;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.generated.model.Appointment;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import static android.icu.util.Calendar.DATE;
+import static android.icu.util.Calendar.HOUR_OF_DAY;
 import static android.icu.util.Calendar.MINUTE;
 import static android.icu.util.Calendar.MONTH;
 import static android.icu.util.Calendar.YEAR;
-import static android.icu.util.Calendar.getInstance;
+import static android.view.View.VISIBLE;
 import static com.amplifyframework.core.Amplify.API;
 
 
+@RequiresApi(api = Build.VERSION_CODES.N)
 public class MainActivity extends AppCompatActivity {
 
-    UserStateDetails loggedUserStateDetails= null;
+    UserStateDetails loggedUserStateDetails = null;
+    ArrayList slotsStored = new ArrayList();
+    private Calendar currentDay = Calendar.getInstance();
+    private View.OnClickListener bulkOpenClose = new View.OnClickListener() {
+        @RequiresApi(api = Build.VERSION_CODES.N)
+        @Override
+        public void onClick(View v) {
+            int min = 0;
+            switch (v.getId()) {
+                case 1:
+                    //open morning of current day
+                    for (min = 11 * 60; min < 13 * 60; min = min + 15) {
+                        final Calendar slotCalendar = Calendar.getInstance();
+                        final int hr = min / 60;
+                        final int minute = min - (hr * 60);
+                        slotCalendar.set(currentDay.get(YEAR), currentDay.get(MONTH), currentDay.get(DATE), hr, minute);
+                        createOpenSlot(slotCalendar, "General", false);
+                    }
 
-    private String getTextVal(int viewId) {
-        return ((EditText)findViewById(viewId)).getText().toString();
-    }
+                    break;
+                case 2:
+                    //close morning
+                    for (min = 11 * 60; min < 13 * 60; min = min + 15) {
+                        final Calendar slotCalendar = Calendar.getInstance();
+                        final int hr = min / 60;
+                        final int minute = min - (hr * 60);
+                        slotCalendar.set(currentDay.get(YEAR), currentDay.get(MONTH), currentDay.get(DATE), hr, minute);
+                        //clo(slotCalendar,"General",false);
+                    }
+                    break;
+                case 3:
+                    //DO something
+                    break;
+                case 4:
+                    //DO something
+            }
+            GoHome();
+
+        }
+    };
 
     private void GoHome() {
         runOnUiThread(new Runnable() {
@@ -84,8 +126,6 @@ public class MainActivity extends AppCompatActivity {
                                         runOnUiThread(new Runnable() {
                                             @RequiresApi(api = Build.VERSION_CODES.N)
                                             public void run() {
-                                                //setContentView(R.layout.activity_main);
-                                                // initHomeView();
                                                 GoToAppointments();
                                             }
                                         });
@@ -175,6 +215,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private String getTextVal(int viewId) {
+        return ((EditText) findViewById(viewId)).getText().toString();
+    }
+
     private void Signin(String username, String password) {
         AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
             @Override
@@ -206,14 +250,29 @@ public class MainActivity extends AppCompatActivity {
             public void onError(Exception e) {
                 //Log.e("Error", "Sign-in error", e);
                 String msg = e.getMessage();
-                makeToast(msg.substring(0, msg.indexOf("(") ));
+                makeToast(msg.substring(0, msg.indexOf("(")));
             }
         });
     }
 
+    private void makeToast(final String s) {
+
+        runOnUiThread(new Runnable() {
+            Context context = getApplicationContext();
+            int duration = Toast.LENGTH_LONG;
+
+            public void run() {
+                Toast toast = Toast.makeText(context, s, duration);
+                toast.setGravity(Gravity.CENTER, 0, 0);
+                toast.show();
+            }
+        });
+
+    }
+
     private void Signup() {
         final String username = "+91" + ((EditText) findViewById(R.id.txtSignupUsername)).getText().toString();
-        final String password = ((EditText)findViewById(R.id.txtSignupPassword)).getText().toString();
+        final String password = ((EditText) findViewById(R.id.txtSignupPassword)).getText().toString();
         final String cPpassword = ((EditText) findViewById(R.id.txtSignupCPassword)).getText().toString();
         //
         final String emailId = ((EditText) findViewById(R.id.txtSignupEmail)).getText().toString();
@@ -253,27 +312,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void makeToast(final String s) {
-
-        runOnUiThread(new Runnable() {
-            Context context = getApplicationContext();
-            int duration = Toast.LENGTH_LONG;
-
-            public void run() {
-                Toast toast = Toast.makeText(context, s, duration);
-                toast.setGravity(Gravity.CENTER, 0, 0);
-                toast.show();
-            }
-        });
-
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private String formatDayDate(Calendar cal)
-    {
-        int day=cal.get(Calendar.DATE);
+    private String formatDayDate(Calendar cal) {
+        int day = cal.get(Calendar.DATE);
         Date date = cal.getTime();
-        if(!((day>10) && (day<19)))
+        if (!((day > 10) && (day < 19)))
             switch (day % 10) {
                 case 1:
                     return new SimpleDateFormat("EEEE, d'st' 'of' MMMM yyyy").format(date);
@@ -289,51 +332,56 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private String formatDayDateTime(Calendar cal)
-    {
+    private String formatDayDateTime(Calendar cal) {
         SimpleDateFormat format = new SimpleDateFormat("EEEE MMM dd yyyy HH:mm");
         Date dt = cal.getTime();
-        String dateString = format.format( dt  );
+        String dateString = format.format(dt);
         return dateString;
         // Date   date       = format.parse ( dt );
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private String formatDate(Calendar cal)
-    {
+    private String formatTime(Calendar cal) {
+        SimpleDateFormat format = new SimpleDateFormat("hh:mm a");
+        Date dt = cal.getTime();
+        String dateString = format.format(dt);
+        return dateString;
+        // Date   date       = format.parse ( dt );
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private String formatDate(Calendar cal) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         Date dt = cal.getTime();
-        String dateString = format.format( dt  );
+        String dateString = format.format(dt);
         return dateString;
         // Date   date       = format.parse ( dt );
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private int formatDateAsId(Calendar cal)
-    {
+    private int formatDateAsId(Calendar cal) {
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         Date dt = cal.getTime();
-        String dateString = format.format( dt  );
+        String dateString = format.format(dt);
         return Integer.parseInt(dateString);
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private String formatDateTime(Calendar cal)
-    {
+    private String formatDateTime(Calendar cal) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date dt = cal.getTime();
-        String dateString = format.format( dt  );
+        String dateString = format.format(dt);
         return dateString;
         // Date   date       = format.parse ( dt );
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void ShowOneDay(ArrayList slotsStored, HorizontalScrollView hsv, final int startTime, final int endTime, final Calendar day)
-    {
+    private void ShowOneDay(ArrayList slotsStored, HorizontalScrollView hsv, final int startTime, final int endTime, final Calendar day) {
         runOnUiThread(new Runnable() {
             public void run() {
 
@@ -349,25 +397,22 @@ public class MainActivity extends AppCompatActivity {
                     oneEvent.setTextAppearance(R.font.roboto_regular);
                     oneEvent.setTextSize(12.0f);
                     //oneEvent.setTextColor(Color.parseColor("#ffffff"));
-                    oneEvent.setPadding(10, 5 , 5, 5);
+                    oneEvent.setPadding(10, 5, 5, 5);
                     oneEvent.setGravity(Gravity.CENTER_HORIZONTAL);
                     oneEvent.setLayoutParams(new LinearLayout.LayoutParams(275, 175));
 
 
                     int hr = min / 60;
                     int minute = min - (hr * 60);
-                    String minStr = (Integer.toString(minute) + "0").substring(0, 2);
-                    Spanned eventDisplay=null;
-                    if(hr<=11)
-                    {
-                        eventDisplay = Html.fromHtml("<b>"+ hr + ":" + minStr + " am</b>");
-                    }
-                    else
-                    {
-                        if(hr >= 13) {
+                    String minStr = (minute + "0").substring(0, 2);
+                    Spanned eventDisplay = null;
+                    if (hr <= 11) {
+                        eventDisplay = Html.fromHtml("<b>" + hr + ":" + minStr + " am</b>");
+                    } else {
+                        if (hr >= 13) {
                             hr = hr - 12;
                         }
-                        eventDisplay = Html.fromHtml("<b>"+ hr + ":" + minStr + " pm</b>");
+                        eventDisplay = Html.fromHtml("<b>" + hr + ":" + minStr + " pm</b>");
                     }
                     boolean slotExists = false;
                     Appointment curAppt = null;
@@ -375,58 +420,68 @@ public class MainActivity extends AppCompatActivity {
 
                         curAppt = (Appointment) slotsStored.get(i);
 
-                        if ( curAppt.isForDay(day) && curAppt.getStartMins() >= min && curAppt.getStartMins() <= min + 14) {
+                        if (curAppt.isForDay(day) && curAppt.getStartMins() >= min && curAppt.getStartMins() <= min + 14) {
                             if (loggedUserIsScheduler()
                                     || curAppt.getType().startsWith("Open")
                                     || curAppt.getPhone().equals(AWSMobileClient.getInstance().getUsername())) {
-                                eventDisplay = (Spanned) TextUtils.concat(eventDisplay,"\n",curAppt.getDisplayString());
-                               // eventDisplay = eventDisplay + "\n" + curAppt.getDisplayString();
+                                eventDisplay = (Spanned) TextUtils.concat(eventDisplay, "\n", curAppt.getDisplayString());
+                                // eventDisplay = eventDisplay + "\n" + curAppt.getDisplayString();
                             }
                             slotExists = true;
+                            if (!loggedUserIsScheduler() && curAppt.getType().startsWith("Reserved") && !getLoggedUsername().equals(curAppt.getPhone())) {
+                                slotExists = false;
+                                curAppt = null;
+                            }
                             break;
                         }
                         curAppt = null;
                     }
-                    if(slotExists) {
-                        Log.i("9031","working on " + curAppt.getType());
-                        if(curAppt.getType().startsWith("Open"))
-                        {
+                    if (slotExists) {
+                        Log.i("9031", "working on " + curAppt.getType());
+                        if (curAppt.getType().startsWith("Open")) {
                             oneEvent.setBackgroundResource(R.drawable.slot_background_open);
-                        }
-                        else if(curAppt.getType().startsWith("Reserved"))
-                        {
-                            if(curAppt.getPhone().equals(AWSMobileClient.getInstance().getUsername()))
-                            {
+                        } else if (curAppt.getType().startsWith("Reserved")) {
+                            if (curAppt.getPhone().equals(AWSMobileClient.getInstance().getUsername())) {
                                 oneEvent.setBackgroundResource(R.drawable.slot_background_reserved_forme);
-                            }
-                            else {
-                                Log.i("9031","setting reserved for type " + curAppt.getType());
+                            } else {
+                                Log.i("9031", "setting reserved for type " + curAppt.getType());
                                 oneEvent.setBackgroundResource(R.drawable.slot_background_reserved);
                             }
                         }
 
-                    }
-                    else
-                    {
-                        eventDisplay = (Spanned) TextUtils.concat(eventDisplay,"\nClosed");
+                    } else {
+                        eventDisplay = (Spanned) TextUtils.concat(eventDisplay, "\nClosed");
                         //eventDisplay = eventDisplay + "\nClosed";
                         oneEvent.setBackgroundResource(R.drawable.slot_background);
                     }
 
                     oneEvent.setText(eventDisplay);
-                    oneEvent.setClickable(true);
+
                     final int finalMin = min;
-                    final Calendar curCal = Calendar.getInstance();
-                    curCal.setTime(day.getTime());
+                    final Calendar curSlotCal = Calendar.getInstance();
+                    curSlotCal.setTime(day.getTime());
+
+                    Calendar slotTime = getCalFromDateAndTime(curSlotCal, finalMin);
+                    Calendar now = Calendar.getInstance();
+                    if (slotTime.getTimeInMillis() > now.getTimeInMillis()) {
+                        oneEvent.setClickable(true);
+                    } else {
+                        oneEvent.setClickable(false);
+                        oneEvent.setPaintFlags(oneEvent.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                        if (!loggedUserIsScheduler()) slotExists = false;
+                    }
                     oneEvent.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Calendar slot = getSlot(curCal, finalMin);
-                            handleSlot(slot);
+                            Calendar slotTime = getCalFromDateAndTime(curSlotCal, finalMin);
+                            Calendar now = Calendar.getInstance();
+                            if (slotTime.getTimeInMillis() > now.getTimeInMillis()) {
+                                handleSlot(slotTime, oneEvent);
+                            }
                         }
                     });
 
-                    if(loggedUserIsScheduler() || slotExists) {
+                    if (loggedUserIsScheduler() || slotExists) {
                         hourlyLayout.addView(oneEvent);
 
 
@@ -442,27 +497,38 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void showSpinner() {
+        ProgressBar spinner = findViewById(R.id.progressBar1);
+        spinner.setVisibility(VISIBLE);
+    }
+
+    private void hideSpinner() {
+        ProgressBar spinner = findViewById(R.id.progressBar1);
+        spinner.setVisibility(View.GONE);
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void handleSlot(final Calendar slot) {
+    private void handleSlot(final Calendar slot, View selectedSlot) {
         runOnUiThread(new Runnable() {
             public void run() {
+                Log.i("9031", "handleSlot " + formatDayDateTime(slot));
                 Amplify.API.query(
                         Appointment.class,
                         Appointment.TIME.eq(formatDateTime(slot)),
                         queryResponse -> {
+
                             boolean hasData = false;
                             for (Appointment appt : queryResponse.getData()) {
                                 hasData = true;
                                 if (appt.getType().startsWith("Open")) {
                                     handleOpenAppointmentSlot(appt);
-                                }
-                                else if(appt.getType().startsWith("Reserved")) {
+                                } else if (appt.getType().startsWith("Reserved")) {
                                     handleBookedAppointmentSlot(appt);
                                 }
                                 break;
                             }
                             if (!hasData) {
-                                handleEmptySlot(slot);
+                                handleEmptySlot(slot, selectedSlot);
                             }
 
                         },
@@ -473,43 +539,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void loadAllSlotsForDay(LinearLayout dailyView, final Calendar day, final int startTime, final int endTime, final String title) {
+    private void loadAllSlotsForDay(LinearLayout dailyView, final Calendar day, final int startTime, final int endTime) {
+
         runOnUiThread(new Runnable() {
             public void run() {
-                if(!title.isEmpty()) {
-                    TextView tv = new TextView(MainActivity.this);
-                    tv.setText(title);
-                    tv.setTypeface(Typeface.create("roboto_light",Typeface.NORMAL));
-                    tv.setTextColor(getResources().getColor(R.color.hkccDark));
-                    tv.setTextSize(14.0f);
-                    tv.setPadding(2, 15, 2, 4);
-                    dailyView.addView(tv);
-                }
+                ProgressBar spinner = findViewById(R.id.progressBar1);
+                spinner.setVisibility(VISIBLE);
 
                 HorizontalScrollView hsv = new HorizontalScrollView(MainActivity.this);
                 dailyView.addView(hsv);
 
+                ShowOneDay(slotsStored, hsv, startTime, endTime, day);
 
-                Amplify.API.query(
-                        Appointment.class,
-                        Appointment.TIME.beginsWith(formatDate(day)),
-                        queryResponse -> {
-                            Log.i("loadAllSlotsForDay:","GOT RESPONSEE-----------------------------");
-                            ArrayList slotsStored = new ArrayList();
-                            for (Appointment appt : queryResponse.getData()) {
-                                slotsStored.add(appt);
-                            }
-                            ShowOneDay(slotsStored, hsv, startTime, endTime, day);
-
-                        },
-                        apiFailure -> Log.e("ApiQuickStart", apiFailure.getMessage(), apiFailure)
-                );
             }
         });
     }
 
-    private void showActionDoneMessage(String message)
-    {
+    private void showActionDoneMessage(String message) {
         runOnUiThread(new Runnable() {
             public void run() {
                 LinearLayout llApptDetails = findViewById(R.id.llAppointmentDetail);
@@ -524,36 +570,39 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void handleEmptySlot(final Calendar slot) {
+    private void handleEmptySlot(final Calendar slot, View selectedSlot) {
 
         runOnUiThread(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             public void run() {
+                Log.i("9031", "handleEmptySlot");
+                LinearLayout llDailyView = findViewById(R.id.llDailyView);
+                llDailyView.removeAllViews();
+
                 LinearLayout llApptDetails = findViewById(R.id.llAppointmentDetail);
                 llApptDetails.removeAllViews();
+
+                final TextView lblApptDetails = addLabel(llApptDetails, "Appointment Time: " + formatTime(slot));
+
                 if (loggedUserIsScheduler()) {
 
-                    Button btnOpenSlot = new Button(MainActivity.this);
-                    btnOpenSlot.setText("Open Slot\nDate: " + formatDayDateTime(slot));
+                    Button btnOpenSlot = addButton(llApptDetails, "Open General Slot");
                     btnOpenSlot.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
-                            createOpenSlot(slot,"General");
+                            createOpenSlot(slot, "General", true);
                             showActionDoneMessage("Slot opened for " + formatDateTime(slot));
                         }
                     });
-                    llApptDetails.addView(btnOpenSlot);
 
-                    //
 
-                    Button btnOpenSlotForVaccination = new Button(MainActivity.this);
-                    btnOpenSlotForVaccination.setText("Open Vaccination Slot\nPurpose: Vaccination\n Date: " + formatDayDateTime(slot));
+                    Button btnOpenSlotForVaccination = addButton(llApptDetails, "Open Vaccination Slot");
                     btnOpenSlotForVaccination.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
-                            createOpenSlot(slot, "Vaccination Only");
+                            createOpenSlot(slot, "Vaccination Only", true);
                             showActionDoneMessage("Vaccination slot opened for " + formatDateTime(slot));
                         }
                     });
-                    llApptDetails.addView(btnOpenSlotForVaccination);
+
 
                 } else {
                     Log.i("logged user is", "NOT  ------------------------------scheduler");
@@ -565,12 +614,21 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private boolean loggedUserIsScheduler()  {
-        if(loggedUserStateDetails != null)
-        {
+    private String getLoggedUsername() {
+        try {
+
+            return AWSMobileClient.getInstance().getUsername();
+        } catch (Exception e) {
+            return "9999999999";
+        }
+    }
+
+    private boolean loggedUserIsScheduler() {
+        if (loggedUserStateDetails != null) {
             try {
-                Log.i("User Name -  ",  AWSMobileClient.getInstance().getUsername());
-                if(AWSMobileClient.getInstance().getUsername().equals("+919900572060")) return true;
+                //Log.i("User Name -  ",  AWSMobileClient.getInstance().getUsername());
+                if (AWSMobileClient.getInstance().getUsername().equals("+919900572060"))
+                    return true;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -583,79 +641,158 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             public void run() {
+                LinearLayout llDailyView = findViewById(R.id.llDailyView);
+                llDailyView.removeAllViews();
+
                 LinearLayout llApptDetails = findViewById(R.id.llAppointmentDetail);
                 llApptDetails.removeAllViews();
+
+                final TextView lblApptDetails = addLabel(llApptDetails, "Appointment Time: " + formatTime(appt.getAppointmentDateTimeAsCalendar()));
+
+                Log.i("9031", "handleOpenAppointmentSlot");
                 if (loggedUserIsScheduler()) {
-                    Button btnCloseSlot = new Button(MainActivity.this);
-                    btnCloseSlot.setText("Close slot for Date: " + formatDayDateTime(appt.getAppointmentDateTimeAsCalendar()));
+                    //Button btnCloseSlot = new Button(MainActivity.this);
+                    Button btnCloseSlot = addButton(llApptDetails, "Close");
                     btnCloseSlot.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
                             closeOpenSlot(appt);
                             showActionDoneMessage("Slot Closed for " + formatDateTime(appt.getAppointmentDateTimeAsCalendar()));
                         }
                     });
-                    llApptDetails.addView(btnCloseSlot);
-                }
-                else
-                {
-                    final EditText txtPatientName = addField(llApptDetails,"Patient Name");
+                } else {
 
-                    Button btnReserveSlot = new Button(MainActivity.this);
-                    btnReserveSlot.setText("Reserve slot for Date: " + formatDayDateTime(appt.getAppointmentDateTimeAsCalendar()));
-                    btnReserveSlot.setOnClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            reserveSlot(appt, txtPatientName.getText().toString(), AWSMobileClient.getInstance().getUsername());
-                            showActionDoneMessage("Slot Closed for " + formatDateTime(appt.getAppointmentDateTimeAsCalendar()));
-                        }
-                    });
-                    llApptDetails.addView(btnReserveSlot);
+
                 }
+
+                final EditText txtPatientName = addField(llApptDetails, "Patient Name");
+
+                Button btnReserveSlot = addButton(llApptDetails, "Reserve");
+
+                btnReserveSlot.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        reserveSlot(appt, txtPatientName.getText().toString(), AWSMobileClient.getInstance().getUsername());
+                        showActionDoneMessage("Slot Closed for " + formatDateTime(appt.getAppointmentDateTimeAsCalendar()));
+                    }
+                });
 
             }
         });
     }
 
+    private Button addButton(LinearLayout llParent, String s) {
+        Button btn = new Button(MainActivity.this);
+        btn.setBackgroundResource(R.drawable.rect_blue);
+        btn.setText(s);
+        btn.setTextColor(Color.WHITE);
+        llParent.addView(btn);
+
+        TextView tv = new TextView(MainActivity.this);
+        tv.setTextSize(2.0f);
+        tv.setPadding(10, 10, 10, 10);
+
+        llParent.addView(tv);
+
+        return btn;
+    }
+
+    private ImageButton addImageButton(LinearLayout llParent, @IdRes int drawable, int width, int height, View.OnClickListener btnClick, int id) {
+        ImageButton btn = new ImageButton(MainActivity.this);
+        btn.setId(id);
+        btn.setBackgroundResource(drawable);
+        btn.setLayoutParams(new LinearLayout.LayoutParams(width, height));
+        btn.setOnClickListener(btnClick);
+        llParent.addView(btn);
+        return btn;
+    }
+
+    private TextView addLabel(LinearLayout llParent, String s) {
+        TextView tv = new TextView(MainActivity.this);
+        tv.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        tv.setTextColor(Color.parseColor("#121833"));
+        tv.setText(s);
+        tv.setTextSize(18.0f);
+
+        Typeface typeface = ResourcesCompat.getFont(MainActivity.this, R.font.sfnsdisplay);
+
+        tv.setTypeface(typeface, Typeface.BOLD);
+
+
+        llParent.addView(tv);
+
+        TextView pad = new TextView(MainActivity.this);
+        pad.setTextSize(2.0f);
+        pad.setPadding(10, 10, 10, 10);
+
+        llParent.addView(pad);
+
+        return tv;
+
+    }
+
     private void handleBookedAppointmentSlot(Appointment appt) {
+
+        runOnUiThread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            public void run() {
+                LinearLayout llDailyView = findViewById(R.id.llDailyView);
+                llDailyView.removeAllViews();
+
+                LinearLayout llApptDetails = findViewById(R.id.llAppointmentDetail);
+                llApptDetails.removeAllViews();
+
+                final TextView lblApptDetails = addLabel(llApptDetails, "Appointment Time: " + formatTime(appt.getAppointmentDateTimeAsCalendar()));
+
+                Log.i("9031", "handleBookedAppointmentSlot");
+                Button btnCloseSlot = addButton(llApptDetails, "Cancel Appointment");
+                btnCloseSlot.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        cancelAppointment(appt);
+                    }
+                });
+
+                if (loggedUserIsScheduler()) {
+                    Button btnCallPatient = addButton(llApptDetails, "Call Patient");
+                    btnCallPatient.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+
+                            Intent intent = new Intent(Intent.ACTION_DIAL);
+                            String temp = "tel:" + appt.getPhone();
+                            intent.setData(Uri.parse(temp));
+
+                            startActivity(intent);
+
+
+                        }
+                    });
+
+                } else {
+
+
+                }
+            }
+        });
     }
 
-    private EditText addField(LinearLayout llParent, String label)
-    {
-        LinearLayout llField = new LinearLayout(MainActivity.this);
-        llField.setOrientation(LinearLayout.HORIZONTAL);
-        llParent.addView(llField,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+    private EditText addField(LinearLayout llParent, String label) {
+        EditText editText = new EditText(MainActivity.this);
+        editText.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        editText.setHint(label);
+        //editText.setBackground(Color.parseColor("#00000000"));
+        editText.setInputType(InputType.TYPE_CLASS_TEXT);
+        editText.setTextColor(Color.parseColor("#030303"));
+        editText.setHintTextColor(Color.parseColor("#d3d3d3"));
 
-        TextView lblPatientName = new TextView(MainActivity.this);
-        lblPatientName.setText(label);
-        llField.addView(lblPatientName,new LinearLayout.LayoutParams( 600 , LinearLayout.LayoutParams.WRAP_CONTENT));
+        llParent.addView(editText);
 
-        EditText txtPatientName = new EditText(MainActivity.this);
-        llField.addView(txtPatientName);
+        TextView tv = new TextView(MainActivity.this);
+        tv.setTextSize(2.0f);
+        tv.setPadding(10, 10, 10, 10);
 
-        return txtPatientName;
+        llParent.addView(tv);
+
+        return editText;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public void createOpenSlot(final Calendar cal, final String purpose) {
-        Appointment appt = Appointment.builder()
-                .name("None")
-                .phone("+919900572060")
-                .type("Open - " + purpose)
-                .time(formatDateTime(cal))
-                .duration(15)
-                .description("none")
-                .build();
-
-
-        API.mutate(
-                appt,
-                MutationType.CREATE,
-                response -> {
-                    Log.i("ApiQuickStart", "Added Open Slot with id: " + response.getData().getId());
-                    GoHome();
-                    },
-                apiFailure -> Log.e("ApiQuickStart", apiFailure.getMessage(), apiFailure)
-        );
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void closeOpenSlot(Appointment appt) {
@@ -695,10 +832,57 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private Calendar getSlot(Calendar curCal, int finalMin) {
+    public void createOpenSlot(final Calendar cal, final String purpose, boolean withUIRefresh) {
+        Appointment appt = Appointment.builder()
+                .name("None")
+                .phone("+919900572060")
+                .type("Open - " + purpose)
+                .time(formatDateTime(cal))
+                .duration(15)
+                .description("none")
+                .build();
+
+
+        API.mutate(
+                appt,
+                MutationType.CREATE,
+                response -> {
+                    if (withUIRefresh) {
+                        //Log.i("ApiQuickStart", "Added Open Slot with id: " + response.getData().getId());
+                        GoHome();
+                    }
+                },
+                apiFailure -> Log.e("ApiQuickStart", apiFailure.getMessage(), apiFailure)
+        );
+    }
+
+    private void cancelAppointment(Appointment slot) {
+        Appointment appt = Appointment.builder()
+                .name("")
+                .phone("")
+                .type("Open - General")
+                .time(formatDateTime(slot.getAppointmentDateTimeAsCalendar()))
+                .duration(15)
+                .description("none")
+                .id(slot.getId())
+                .build();
+
+        API.mutate(
+                appt,
+                MutationType.UPDATE,
+                response -> {
+                    Log.i("ApiQuickStart", "Deleted Slot");
+                    GoHome();
+                },
+                apiFailure -> Log.e("ApiQuickStart", apiFailure.getMessage(), apiFailure)
+        );
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private Calendar getCalFromDateAndTime(Calendar date, int time) {
         Calendar slot = Calendar.getInstance();
-        slot.setTime(curCal.getTime());
-        slot.add(MINUTE,finalMin);
+        slot.setTime(date.getTime());
+        slot.add(MINUTE, time);
 
         return slot;
     }
@@ -708,16 +892,27 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_calendar);
 
+        TextView ph = findViewById(R.id.txtUserPhoneNumberFooter);
+        ph.setText(getLoggedUsername());
+
         Calendar cal = Calendar.getInstance();
+        cal.setTime(currentDay.getTime());
+        Log.i("9031", "HOUR=" + cal.get(HOUR_OF_DAY));
+        if (cal.get(HOUR_OF_DAY) >= 20) {
+            cal.add(DATE, 1);
+        }
         cal.set(cal.get(YEAR), cal.get(MONTH), cal.get(DATE), 0, 0, 0);
 
         createDailyView(cal);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void createDailyView(Calendar forDay)
-    {
+    private void createDailyView(Calendar forDay) {
+        MainActivity.this.currentDay = forDay;
+
         LinearLayout dailyView = findViewById(R.id.llDailyView);
+        LinearLayout apptView = findViewById(R.id.llAppointmentDetail);
+
 
         final Calendar curDay = Calendar.getInstance();
         //curDay.setTime(forDay.getTime());
@@ -727,6 +922,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 dailyView.removeAllViews();
+                apptView.removeAllViews();
                 createDailyView(curDay);
             }
         });
@@ -739,6 +935,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 dailyView.removeAllViews();
+                apptView.removeAllViews();
                 createDailyView(nextDay);
             }
         });
@@ -751,15 +948,61 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 dailyView.removeAllViews();
+                apptView.removeAllViews();
                 createDailyView(prevDay);
             }
         });
 
-        loadAllSlotsForDay(dailyView,forDay, 11*60, 12*60 - 15 , "Morning" );
-        loadAllSlotsForDay(dailyView,forDay, 12*60, 13*60 -15 ,"" );
-        loadAllSlotsForDay(dailyView,forDay, 18*60, 19*60 - 15,"Evening" );
-        loadAllSlotsForDay(dailyView,forDay, 19*60, 20*60 - 15,"" );
+        slotsStored.clear();
+        showSpinner();
+        Amplify.API.query(
+                Appointment.class,
+                Appointment.TIME.beginsWith(formatDate(forDay)),
+                queryResponse -> {
+                    for (Appointment appt : queryResponse.getData()) {
+                        slotsStored.add(appt);
+                    }
+                    makeAppointmentsUIForDay(forDay);
+                },
+                apiFailure -> Log.e("ApiQuickStart", apiFailure.getMessage(), apiFailure)
+        );
+    }
 
+    private void makeAppointmentsUIForDay(Calendar forDay) {
+        runOnUiThread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            public void run() {
+                showSpinner();
+                LinearLayout dailyView = findViewById(R.id.llDailyView);
+                LinearLayout apptView = findViewById(R.id.llAppointmentDetail);
+
+                LinearLayout llMorning = new LinearLayout(MainActivity.this);
+                llMorning.setOrientation(LinearLayout.HORIZONTAL);
+                dailyView.addView(llMorning);
+                TextView morn = addLabel(llMorning, "Morning");
+
+                loadAllSlotsForDay(dailyView, forDay, 11 * 60, 12 * 60 - 15);
+                loadAllSlotsForDay(dailyView, forDay, 12 * 60, 13 * 60 - 15);
+                TextView pad = addLabel(dailyView, "");
+
+                LinearLayout llEvening = new LinearLayout(MainActivity.this);
+                llEvening.setOrientation(LinearLayout.HORIZONTAL);
+                dailyView.addView(llEvening);
+                TextView eve = addLabel(llEvening, "Evening");
+
+                loadAllSlotsForDay(dailyView, forDay, 18 * 60, 19 * 60 - 15);
+                loadAllSlotsForDay(dailyView, forDay, 19 * 60, 20 * 60 - 15);
+
+                if (loggedUserIsScheduler()) {
+                    ImageButton openMorning = addImageButton(llMorning, R.drawable.open, 200, 90, bulkOpenClose, 1);
+                    ImageButton closeMorning = addImageButton(llMorning, R.drawable.close, 200, 90, bulkOpenClose, 2);
+                    ImageButton openEve = addImageButton(llEvening, R.drawable.open, 200, 90, bulkOpenClose, 3);
+                    ImageButton closeEve = addImageButton(llEvening, R.drawable.close, 200, 90, bulkOpenClose, 4);
+
+                }
+                hideSpinner();
+            }
+        });
     }
 
     @Override
@@ -796,6 +1039,11 @@ public class MainActivity extends AppCompatActivity {
             Log.e("ApiQuickstart", exception.getMessage(), exception);
         }
 
+        GoHome();
+    }
+
+    @Override
+    public void onBackPressed() {
         GoHome();
     }
 }
