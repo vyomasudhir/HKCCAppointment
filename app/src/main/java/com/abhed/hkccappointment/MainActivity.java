@@ -433,7 +433,7 @@ public class MainActivity extends AppCompatActivity {
                     //oneEvent.setTextColor(Color.parseColor("#ffffff"));
                     oneEvent.setPadding(10, 5, 5, 5);
                     oneEvent.setGravity(Gravity.CENTER_HORIZONTAL);
-                    oneEvent.setLayoutParams(new LinearLayout.LayoutParams(275, 175));
+                    oneEvent.setLayoutParams(new LinearLayout.LayoutParams(215, 150));
 
 
                     int hr = min / 60;
@@ -1072,14 +1072,14 @@ public class MainActivity extends AppCompatActivity {
 
                     LinearLayout llSetClearSched = new LinearLayout(MainActivity.this);
                     llEndDatePicker.setOrientation(LinearLayout.HORIZONTAL);
-                    ImageButton btnSetNormalSchedule = addImageButton(llSetClearSched, R.drawable.setnormalschedule, 550, 130, bulkOpenClose, 5);
-                    ImageButton btnClearSchedule = addImageButton(llSetClearSched, R.drawable.clearschedule, 550, 130, bulkOpenClose, 6);
+                    ImageButton btnSetNormalSchedule = addImageButton(llSetClearSched, R.drawable.setnormalschedule, 500, 130, bulkOpenClose, 5);
+                    ImageButton btnClearSchedule = addImageButton(llSetClearSched, R.drawable.clearschedule, 500, 130, bulkOpenClose, 6);
                     dailyView.addView(llSetClearSched);
 
                     LinearLayout llClearMornEveSched = new LinearLayout(MainActivity.this);
                     llClearMornEveSched.setOrientation(LinearLayout.HORIZONTAL);
-                    ImageButton btnClearMorning = addImageButton(llClearMornEveSched, R.drawable.clearmornings, 550, 130, bulkOpenClose, 7);
-                    ImageButton btnClearEvening = addImageButton(llClearMornEveSched, R.drawable.clearevenings, 550, 130, bulkOpenClose, 8);
+                    ImageButton btnClearMorning = addImageButton(llClearMornEveSched, R.drawable.clearmornings, 500, 130, bulkOpenClose, 7);
+                    ImageButton btnClearEvening = addImageButton(llClearMornEveSched, R.drawable.clearevenings, 500, 130, bulkOpenClose, 8);
                     dailyView.addView(llClearMornEveSched);
 
 
