@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     static Calendar bulkEndDate;
     boolean loggedUserIsAdmin = false;
     String loggedUserName = null;
+    //Abhed has started contributing to this project
     private View.OnClickListener setStartDate = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
