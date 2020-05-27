@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
         @RequiresApi(api = Build.VERSION_CODES.N)
         @Override
         public void onClick(View v) {
-
+            showSpinner();
             switch (v.getId()) {
                 case 1:
                     //open morning of current day
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 case 7:
                 case 8:
                     while (bulkStartDate.getTimeInMillis() < bulkEndDate.getTimeInMillis()) {
-                        bulkStartDate.add(DATE, 1);
+
                         Calendar curDate = Calendar.getInstance();
                         curDate.setTime(bulkStartDate.getTime());
                         Log.i("9031 bulkdate:", DateFormatter.formatDate(curDate));
@@ -163,6 +163,7 @@ public class MainActivity extends AppCompatActivity {
                                 },
                                 apiFailure -> Log.e("ApiQuickStart", apiFailure.getMessage(), apiFailure)
                         );
+                        bulkStartDate.add(DATE, 1);
                     }
                     break;
             }
@@ -216,6 +217,7 @@ public class MainActivity extends AppCompatActivity {
 
                 buttonSignIn.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
+                        
                         Signin("+91" + getTextVal(R.id.txtSignInName), getTextVal(R.id.txtSigninPassword));
                     }
                 });
@@ -427,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
                     TextView oneEvent = new TextView(MainActivity.this);
 
                     oneEvent.setId(DateFormatter.formatDateAsId(day));
-                    oneEvent.setTextSize(12.0f);
+                    oneEvent.setTextSize(10.0f);
                     oneEvent.setPadding(10, 5, 5, 5);
                     oneEvent.setGravity(Gravity.CENTER_HORIZONTAL);
                     oneEvent.setLayoutParams(new LinearLayout.LayoutParams(dip2pix(getApplicationContext(), 75), dip2pix(getApplicationContext(), 50)));
@@ -493,8 +495,10 @@ public class MainActivity extends AppCompatActivity {
 
                     Calendar slotTime = getCalFromDateAndTime(curSlotCal, finalMin);
                     Calendar now = Calendar.getInstance();
+                    Log.i("9031", "Diff before " + DateFormatter.formatDayDateTime(slotTime) + ":" + DateFormatter.formatDayDateTime(now));
                     if (slotTime.getTimeInMillis() > now.getTimeInMillis()) {
                         oneEvent.setClickable(true);
+                        Log.i("9031", "Diff " + slotTime.getTimeInMillis() + ":" + now.getTimeInMillis());
                     } else {
                         oneEvent.setClickable(false);
                         oneEvent.setPaintFlags(oneEvent.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
@@ -503,6 +507,7 @@ public class MainActivity extends AppCompatActivity {
                     oneEvent.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            showSpinner();
                             Calendar slotTime = getCalFromDateAndTime(curSlotCal, finalMin);
                             Calendar now = Calendar.getInstance();
                             if (slotTime.getTimeInMillis() > now.getTimeInMillis()) {
@@ -529,15 +534,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showSpinner() {
-        ProgressBar spinner = findViewById(R.id.progressBar1);
-        if (spinner != null)
-            spinner.setVisibility(VISIBLE);
+        runOnUiThread(new Runnable() {
+            public void run() {
+                ProgressBar spinner = findViewById(R.id.progressBar1);
+                if (spinner != null)
+                    spinner.setVisibility(VISIBLE);
+            }
+        });
     }
 
     private void hideSpinner() {
-        ProgressBar spinner = findViewById(R.id.progressBar1);
-        if (spinner != null)
-            spinner.setVisibility(View.GONE);
+        runOnUiThread(new Runnable() {
+            public void run() {
+                ProgressBar spinner = findViewById(R.id.progressBar1);
+                if (spinner != null)
+                    spinner.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void showActionDoneMessage(String message) {
@@ -578,7 +591,7 @@ public class MainActivity extends AppCompatActivity {
                             if (!hasData) {
                                 AppointmentActionHandler.handleEmptySlot(MainActivity.this, slot);
                             }
-
+                            hideSpinner();
                         },
                         apiFailure -> Log.e("ApiQuickStart", apiFailure.getMessage(), apiFailure)
                 );
@@ -621,7 +634,7 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void closeOpenSlot(Appointment appt) {
-
+        showSpinner();
         API.mutate(
                 appt,
                 MutationType.DELETE,
@@ -635,6 +648,7 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void reserveSlot(Appointment openSlot, String who, String phone) {
+        showSpinner();
         Appointment appt = Appointment.builder()
                 .name(who)
                 .phone(phone)
@@ -659,7 +673,8 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private Calendar getCalFromDateAndTime(Calendar date, int time) {
         Calendar slot = Calendar.getInstance();
-        slot.setTime(date.getTime());
+        //slot.setTime(date.getTime());
+        slot.set(date.get(YEAR),date.get(MONTH),date.get(DATE),0,0,0);
         slot.add(MINUTE, time);
 
         return slot;
@@ -667,7 +682,7 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     public void createOpenSlot(final Calendar cal, final String purpose) {
-
+        showSpinner();
         Appointment appt = Appointment.builder()
                 .name("None")
                 .phone("")
@@ -689,6 +704,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void cancelAppointment(Appointment slot) {
+        showSpinner();
         Appointment appt = Appointment.builder()
                 .name("")
                 .phone("")
@@ -793,6 +809,7 @@ public class MainActivity extends AppCompatActivity {
                         slotsStored.add(appt);
                     }
                     renderAppointmentsUIForDay(forDay);
+                    hideSpinner();
                 },
                 apiFailure -> Log.e("ApiQuickStart", apiFailure.getMessage(), apiFailure)
         );
