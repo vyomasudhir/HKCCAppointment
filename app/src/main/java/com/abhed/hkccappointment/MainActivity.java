@@ -76,11 +76,6 @@ public class MainActivity extends AppCompatActivity {
     String loggedUserName = null;
     //Abhed has started contributing to this project
 
-    public static int dip2pix(@NonNull Context context, int dip) {
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip,
-                context.getResources().getDisplayMetrics());
-    }
-
     private View.OnClickListener setStartDate = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -107,11 +102,11 @@ public class MainActivity extends AppCompatActivity {
             switch (v.getId()) {
                 case 1:
                     //open morning of current day
-                    openBulkSlots(currentDay, 11 * 60, 13 * 60);
+                    openBulkSlots(currentDay, 10 * 60 + 30, 13 * 60);
                     break;
                 case 2:
                     //close morning
-                    closeBulkSlots(currentDay, 11 * 60, 13 * 60);
+                    closeBulkSlots(currentDay, 10 * 60 + 30, 13 * 60);
                     break;
                 case 3:
                     //open evening of current day
@@ -143,18 +138,18 @@ public class MainActivity extends AppCompatActivity {
                                     switch (v.getId()) {
                                         case 5: //normal schedule
                                             if (curDate.get(DAY_OF_WEEK) != Calendar.SATURDAY) {
-                                                openBulkSlots(curDate, 11 * 60, 13 * 60);
+                                                openBulkSlots(curDate, 10 * 60 + 30, 13 * 60);
                                             }
                                             if (curDate.get(DAY_OF_WEEK) != Calendar.SATURDAY && curDate.get(DAY_OF_WEEK) != Calendar.SUNDAY) {
                                                 openBulkSlots(curDate, 18 * 60, 20 * 60);
                                             }
                                             break;
                                         case 6: // clear all
-                                            closeBulkSlots(curDate, 11 * 60, 13 * 60);
+                                            closeBulkSlots(curDate, 10 * 60 + 30, 13 * 60);
                                             closeBulkSlots(curDate, 18 * 60, 20 * 60);
                                             break;
                                         case 7: // clear mornings
-                                            closeBulkSlots(curDate, 11 * 60, 13 * 60);
+                                            closeBulkSlots(curDate, 10 * 60 + 30, 13 * 60);
                                             break;
                                         case 8: // clear all
                                             closeBulkSlots(curDate, 18 * 60, 20 * 60);
@@ -171,6 +166,13 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
+
+    public static int dip2pix(@NonNull Context context, int dip) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip,
+                context.getResources().getDisplayMetrics());
+    }
+
+
 
     private void openBulkSlots(Calendar forDay, int startMin, int endMin) {
         int min;
@@ -194,42 +196,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void GoSignUp() {
-        runOnUiThread(new Runnable() {
-            public void run() {
+        runOnUiThread(() -> {
 
-                setContentView(R.layout.activity_signup);
-                final Button btnSignUp = findViewById(R.id.btnSignup);
-                btnSignUp.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        Signup();
-                    }
-                });
-            }
+            setContentView(R.layout.activity_signup);
+            final Button btnSignUp = findViewById(R.id.btnSignup);
+            btnSignUp.setOnClickListener(v -> Signup());
         });
     }
 
     private void GoSignIn() {
-        runOnUiThread(new Runnable() {
-            public void run() {
-                setContentView(R.layout.activity_signin);
+        runOnUiThread(() -> {
+            setContentView(R.layout.activity_signin);
 
-                final ImageView buttonSignIn = findViewById(R.id.btnSignIn);
+            final ImageView buttonSignIn = findViewById(R.id.btnSignIn);
 
-                buttonSignIn.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        
-                        Signin("+91" + getTextVal(R.id.txtSignInName), getTextVal(R.id.txtSigninPassword));
-                    }
-                });
+            buttonSignIn.setOnClickListener(v -> Signin("+91" + getTextVal(R.id.txtSignInName), getTextVal(R.id.txtSigninPassword)));
 
-                final TextView buttonSignUp = findViewById(R.id.btnGoSignUp);
+            final TextView buttonSignUp = findViewById(R.id.btnGoSignUp);
 
-                buttonSignUp.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        GoSignUp();
-                    }
-                });
-            }
+            buttonSignUp.setOnClickListener(v -> GoSignUp());
         });
     }
 
@@ -260,25 +245,22 @@ public class MainActivity extends AppCompatActivity {
         AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
             @Override
             public void onResult(final SignInResult signInResult) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.d("Sign in", ": " + signInResult.getSignInState());
-                        switch (signInResult.getSignInState()) {
-                            case DONE:
-                                makeToast("Sign-in done.");
-                                GoHome();
-                                break;
-                            case SMS_MFA:
-                                makeToast("Please confirm sign-in with SMS.");
-                                break;
-                            case NEW_PASSWORD_REQUIRED:
-                                makeToast("Please confirm sign-in with new password.");
-                                break;
-                            default:
-                                makeToast("Unsupported sign-in confirmation: " + signInResult.getSignInState());
-                                break;
-                        }
+                runOnUiThread(() -> {
+                    Log.d("Sign in", ": " + signInResult.getSignInState());
+                    switch (signInResult.getSignInState()) {
+                        case DONE:
+                            makeToast("Sign-in done.");
+                            GoHome();
+                            break;
+                        case SMS_MFA:
+                            makeToast("Please confirm sign-in with SMS.");
+                            break;
+                        case NEW_PASSWORD_REQUIRED:
+                            makeToast("Please confirm sign-in with new password.");
+                            break;
+                        default:
+                            makeToast("Unsupported sign-in confirmation: " + signInResult.getSignInState());
+                            break;
                     }
                 });
             }
@@ -287,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
             public void onError(Exception e) {
                 //Log.e("Error", "Sign-in error", e);
                 String msg = e.getMessage();
-                makeToast(msg.substring(0, msg.indexOf("(")));
+                makeToast(msg);
             }
         });
     }
@@ -325,18 +307,15 @@ public class MainActivity extends AppCompatActivity {
         AWSMobileClient.getInstance().signUp(username, password, attributes, null, new Callback<SignUpResult>() {
             @Override
             public void onResult(final SignUpResult signUpResult) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.i("Sign-up callback: ", " State");
-                        if (!signUpResult.getConfirmationState()) {
-                            final UserCodeDeliveryDetails details = signUpResult.getUserCodeDeliveryDetails();
-                            makeToast("Confirm sign-up with: " + details.getDestination());
-                        } else {
-                            makeToast("Sign-up done.");
-                        }
-                        GoSignIn();
+                runOnUiThread(() -> {
+                    Log.i("Sign-up callback: ", " State");
+                    if (!signUpResult.getConfirmationState()) {
+                        final UserCodeDeliveryDetails details = signUpResult.getUserCodeDeliveryDetails();
+                        makeToast("Confirm sign-up with");
+                    } else {
+                        makeToast("Sign-up done.");
                     }
+                    GoSignIn();
                 });
             }
 
@@ -344,13 +323,13 @@ public class MainActivity extends AppCompatActivity {
             public void onError(Exception e) {
                 Log.e("Sign-up error", String.valueOf(e));
                 String msg = e.getMessage();
-                makeToast(msg.substring(0, msg.indexOf("(")));
+                makeToast(msg);
             }
         });
     }
 
     private void closeBulkSlots(Calendar forDay, int startMin, int endMin) {
-        int min = 0;
+        int min;
         for (min = startMin; min < endMin; min = min + 15) {
             for (int i = 0; i < slotsStored.size(); i++) {
                 Appointment curAppt = (Appointment) slotsStored.get(i);
@@ -363,56 +342,55 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void GoHome() {
-        runOnUiThread(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            public void run() {
+        runOnUiThread(() -> {
 
-                //setTitle(Html.fromHtml("<font color='#121833'> Healthy Kids Children's Clinic</font>",0));
+            //setTitle(Html.fromHtml("<font color='#121833'> Healthy Kids Children's Clinic</font>",0));
 
-                AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
-                    @Override
-                    public void onResult(UserStateDetails userStateDetails) {
-                        // makeToast(userStateDetails.getUserState().toString());
-                        loggedUserStateDetails = userStateDetails;
-                        switch (userStateDetails.getUserState()) {
-                            case SIGNED_IN:
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        runOnUiThread(new Runnable() {
-                                            @RequiresApi(api = Build.VERSION_CODES.N)
-                                            public void run() {
-                                                loggedUserName = AWSMobileClient.getInstance().getUsername();
-                                                loggedUserIsAdmin = loggedUserName.equals("+919900572060");
+            AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
+                @Override
+                public void onResult(UserStateDetails userStateDetails) {
+                    Log.i("9031", "have result");
+                    // makeToast(userStateDetails.getUserState().toString());
+                    loggedUserStateDetails = userStateDetails;
+                    Log.i("9031", "userStateDetails.getUserState() = " + userStateDetails.getUserState());
+                    switch (userStateDetails.getUserState()) {
+                        case SIGNED_IN:
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    runOnUiThread(new Runnable() {
+                                        @RequiresApi(api = Build.VERSION_CODES.N)
+                                        public void run() {
+                                            loggedUserName = AWSMobileClient.getInstance().getUsername();
+                                            loggedUserIsAdmin = loggedUserName.equals("+919900572060");
 
-                                                GoToAppointments();
-                                            }
-                                        });
-                                    }
-                                });
-                                break;
-                            case SIGNED_OUT:
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        GoSignIn();
-                                    }
-                                });
-                                break;
+                                            GoToAppointments();
+                                        }
+                                    });
+                                }
+                            });
+                            break;
+                        case SIGNED_OUT:
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    GoSignIn();
+                                }
+                            });
+                            break;
 
-                            default:
-                                AWSMobileClient.getInstance().signOut();
-                                Signout();
-                                break;
-                        }
+                        default:
+                            AWSMobileClient.getInstance().signOut();
+                            Signout();
+                            break;
                     }
+                }
 
-                    @Override
-                    public void onError(Exception e) {
-                        Log.e("INIT", e.toString());
-                    }
-                });
-            }
+                @Override
+                public void onError(Exception e) {
+                    Log.e("INIT", e.toString());
+                }
+            });
         });
     }
 
@@ -616,10 +594,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private ImageButton addImageButton(LinearLayout llParent, @IdRes int drawable, int width, int height, View.OnClickListener btnClick, int id) {
+    private ImageButton addImageButton(LinearLayout llParent, @IdRes int drawableImg, int width, int height, View.OnClickListener btnClick, int id) {
         ImageButton btn = new ImageButton(MainActivity.this);
         btn.setId(id);
-        btn.setBackgroundResource(drawable);
+        btn.setBackgroundResource(drawableImg);
         btn.setLayoutParams(new LinearLayout.LayoutParams(dip2pix(getApplicationContext(), width), dip2pix(getApplicationContext(), height)));
         btn.setOnClickListener(btnClick);
         llParent.addView(btn);
@@ -728,6 +706,7 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void GoToAppointments() {
+        //deleteCache(MainActivity.this);
         runOnUiThread(new Runnable() {
 
             public void run() {
@@ -749,7 +728,7 @@ public class MainActivity extends AppCompatActivity {
                     cal.add(DATE, 1);
                 }
                 cal.set(cal.get(YEAR), cal.get(MONTH), cal.get(DATE), 0, 0, 0);
-
+                Log.i("9031", "calling createDailyView()");
                 createDailyView(cal);
 
             }
@@ -801,10 +780,12 @@ public class MainActivity extends AppCompatActivity {
 
 
         slotsStored.clear();
+        Log.i("9031", "Queryng");
         Amplify.API.query(
                 Appointment.class,
                 Appointment.TIME.beginsWith(DateFormatter.formatDate(forDay)),
                 queryResponse -> {
+                    Log.i("9031", "Queryng response");
                     for (Appointment appt : queryResponse.getData()) {
                         slotsStored.add(appt);
                     }
@@ -830,7 +811,7 @@ public class MainActivity extends AppCompatActivity {
                 dailyView.addView(llMorning);
                 TextView morn = UIBuilder.addLabel(MainActivity.this, llMorning, "Morning  ");
 
-                loadAllSlotsForDay(dailyView, forDay, 11 * 60, 12 * 60 - 15);
+                loadAllSlotsForDay(dailyView, forDay, 10 * 60 + 30, 12 * 60 - 15);
                 loadAllSlotsForDay(dailyView, forDay, 12 * 60, 13 * 60 - 15);
                 TextView pad = UIBuilder.addLabel(MainActivity.this, dailyView, "");
 
