@@ -107,12 +107,7 @@ public class AppointmentActionHandler {
 
                 clearViews(activity);
 
-
-                if (activity.loggedUserIsScheduler()) {
-                    renderAppointmentHeader(activity, appt.getAppointmentDateTimeAsCalendar(), appt, "New Appointment or Close Slot:");
-                } else {
-                    renderAppointmentHeader(activity, appt.getAppointmentDateTimeAsCalendar(), appt, "New Appointment:");
-                }
+                renderAppointmentHeader(activity, appt.getAppointmentDateTimeAsCalendar(), appt, "New Appointment:");
 
                 final EditText txtPatientName = UIBuilder.addField(activity, llDailyView, "Patient Name");
 
@@ -135,8 +130,9 @@ public class AppointmentActionHandler {
                 });
 
                 if (activity.loggedUserIsScheduler()) {
-                    TextView pad = UIBuilder.addLabel(activity, llDailyView, "");
+
                     UIBuilder.addSeparator(activity, llDailyView);
+                    final TextView lblAppt = UIBuilder.addLabel(activity, llDailyView, "Close Slot:");
                     Button btnCloseSlot = UIBuilder.addButton(activity, llDailyView, "Close");
                     btnCloseSlot.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
