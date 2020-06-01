@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.InputType;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -87,5 +88,17 @@ public class UIBuilder {
 
         return tv;
 
+    }
+
+    public static void addSeparator(MainActivity activity, LinearLayout llDailyView) {
+        View v = new View(activity);
+        v.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                5
+        ));
+        v.setBackgroundColor(Color.parseColor("#DDDDDD"));
+        
+        llDailyView.addView(v);
+        TextView pad = UIBuilder.addLabel(activity, llDailyView, "");
     }
 }

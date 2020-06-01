@@ -46,8 +46,12 @@ public class AppointmentActionHandler {
         final TextView lblTime = UIBuilder.addLabelSmall(activity, llDailyView, "Time: " + DateFormatter.formatTime(apptTime));
 
         if (appt != null) {
-            final TextView lblPatientName = UIBuilder.addLabelSmall(activity, llDailyView, "Patient: " + appt.getName());
-            final TextView lblPhoneNumber = UIBuilder.addLabelSmall(activity, llDailyView, "Phone: " + appt.getPhone());
+            if (!appt.getName().isEmpty() && !appt.getName().equals("None")) {
+                final TextView lblPatientName = UIBuilder.addLabelSmall(activity, llDailyView, "Patient: " + appt.getName());
+            }
+            if (!appt.getPhone().isEmpty()) {
+                final TextView lblPhoneNumber = UIBuilder.addLabelSmall(activity, llDailyView, "Phone: " + appt.getPhone());
+            }
         }
 
         TextView pad = UIBuilder.addLabel(activity, llDailyView, "");
@@ -105,16 +109,9 @@ public class AppointmentActionHandler {
 
 
                 if (activity.loggedUserIsScheduler()) {
-                    renderAppointmentHeader(activity, appt.getAppointmentDateTimeAsCalendar(), appt, "Close Slot or Book Appointment:");
-                    Button btnCloseSlot = UIBuilder.addButton(activity, llDailyView, "Close");
-                    btnCloseSlot.setOnClickListener(new View.OnClickListener() {
-                        public void onClick(View v) {
-                            activity.closeOpenSlot(appt);
-
-                        }
-                    });
+                    renderAppointmentHeader(activity, appt.getAppointmentDateTimeAsCalendar(), appt, "New Appointment or Close Slot:");
                 } else {
-                    renderAppointmentHeader(activity, appt.getAppointmentDateTimeAsCalendar(), appt, "Reserve Appointment:");
+                    renderAppointmentHeader(activity, appt.getAppointmentDateTimeAsCalendar(), appt, "New Appointment:");
                 }
 
                 final EditText txtPatientName = UIBuilder.addField(activity, llDailyView, "Patient Name");
@@ -137,9 +134,22 @@ public class AppointmentActionHandler {
                     }
                 });
 
+                if (activity.loggedUserIsScheduler()) {
+                    TextView pad = UIBuilder.addLabel(activity, llDailyView, "");
+                    UIBuilder.addSeparator(activity, llDailyView);
+                    Button btnCloseSlot = UIBuilder.addButton(activity, llDailyView, "Close");
+                    btnCloseSlot.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            activity.closeOpenSlot(appt);
+
+                        }
+                    });
+                }
+
             }
         });
     }
+
 
     public static void handleBookedAppointmentSlot(MainActivity activity, Appointment appt) {
 

@@ -531,20 +531,6 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void showActionDoneMessage(String message) {
-        runOnUiThread(new Runnable() {
-            public void run() {
-                LinearLayout llApptDetails = findViewById(R.id.llAppointmentDetail);
-                llApptDetails.removeAllViews();
-
-                TextView tv = new TextView(MainActivity.this);
-                tv.setText(message);
-
-                llApptDetails.addView(tv);
-            }
-        });
-
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void handleSlot(final Calendar slot, View selectedSlot) {
@@ -580,16 +566,14 @@ public class MainActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void loadAllSlotsForDay(LinearLayout dailyView, final Calendar day, final int startTime, final int endTime) {
 
-        runOnUiThread(new Runnable() {
-            public void run() {
+        runOnUiThread(() -> {
 
 
-                HorizontalScrollView hsv = new HorizontalScrollView(MainActivity.this);
-                dailyView.addView(hsv);
+            HorizontalScrollView hsv = new HorizontalScrollView(MainActivity.this);
+            dailyView.addView(hsv);
 
-                ShowOneDay(slotsStored, hsv, startTime, endTime, day);
+            ShowOneDay(slotsStored, hsv, startTime, endTime, day);
 
-            }
         });
     }
 
